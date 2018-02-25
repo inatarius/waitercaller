@@ -1,8 +1,11 @@
+import config
+from bitlyhelper import BitlyHelper
 from flask import Flask
 from flask import render_template
 from flask import redirect
 from flask import request
 from flask import url_for
+from flask.ext.login import current_user
 from flask.ext.login import LoginManager
 from flask.ext.login import login_required
 from flask.ext.login import login_user
@@ -16,6 +19,7 @@ app.secret_key = 'tok/OHM7jeKFYpWhlvTC3cjbFw4vUJ7aLp+jMq50GUIrxIwK+0Q08FHEWTfBBo
 login_manager = LoginManager(app)
 DB = DBHelper()
 PH = PasswordHelper()
+BH = BitlyHelper()
 
 @app.route("/")
 def home():
@@ -54,12 +58,31 @@ def register():
 @app.route("/account")
 @login_required
 def account():
-    return render_template("account.html")
+    tables = DB.get_tables(current_user.get_id())
+    return render_template("account.html", tables=tables)
+
+@app.route("/account/createtable", methods=["POST"])
+@login_required
+def account_createtable():
+    tablename = request.form.get("tablenumber")
+    tableid = DB.add_table(tablename, current_user.get_id())
+    new_url = BH.shorten_url(config.base_url + "newrequest/" + tableid)
+    DB.update_table(tableid, new_url)
+    return redirect(url_for('account'))
+
+@app.route("/account/deletetable")
+@login_required
+def account_deletetable():
+    tableid = request.args.get("tableid")
+    DB.delete_table(tableid)
+    return redirect(url_for('account'))
 
 @app.route("/dashboard")
 @login_required
 def dashboard():
     return render_template("dashboard.html")
+
+
 
 @login_manager.user_loader
 def load_user(user_id):
