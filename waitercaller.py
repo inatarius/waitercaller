@@ -14,9 +14,13 @@ from flask.ext.login import logout_user
 from forms import LoginForm
 from forms import RegistrationForm
 from forms import CreateTableForm
-from mockdbhelper import MockDBHelper as DBHelper
 from passwordhelper import PasswordHelper
 from user import User
+
+if config.test:
+    from mockdbhelper import MockDBHelper as DBHelper
+else:
+    from dbhelper import DBHelper
 
 app = Flask(__name__)
 app.secret_key = 'tok/OHM7jeKFYpWhlvTC3cjbFw4vUJ7aLp+jMq50GUIrxIwK+0Q08FHEWTfBBohq/irKgGVNJJvE/rNy0UvPIWFEjkRsTqDU2CsL'
